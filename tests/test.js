@@ -7,14 +7,16 @@ const path = require('path')
 
 const filepath = path.join(__dirname, 'i-love-you.mp3')
 
+gtts.maxChars = 200
+
 gtts.save(filepath, 'I love you')
   .then(() => {
     console.log(`save file: "${filepath}" done`)
   })
 
-gtts.save(path.join(__dirname, 'lorem-ipsum.mp3'), 'I love you so much. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.')
+gtts.save(path.join(__dirname, 'reddit-test.mp3'), 'That camper is actually the single best photo the author could have used. It is a perfect depiction of the crazy alt-right. They are some of the lowest educated, and poorest. Yet, they’re the first ones to cry about government handouts, despite being some of the best candidates for it. Also, even though they think they don’t get “handouts,” I’d be willing to bet they get some sort of government benefit. It is actually sad to see people be so brainwashed, that they think taking some money from the government is bad, if they need it. If the government wants to give me free money, let em! I’ll be happy to take anything weighing their pockets down.')
   .then(() => {
-    console.log('save file: "./lorem-ipsum.mp3" done')
+    console.log('save file: "./reddit-test.mp3" done')
   })
 
 /*
@@ -23,4 +25,4 @@ gtts.save(path.join(__dirname, 'lorem-ipsum.mp3'), 'I love you so much. Lorem Ip
  *  + ?text=your-text //read text in defaut language
  *  + ?text=bonjour&lang=fr //read text in specific language (by each request)
  */
-gtts.createServer(8668)
+// gtts.createServer(8668)

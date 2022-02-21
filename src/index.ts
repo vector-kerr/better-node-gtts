@@ -79,15 +79,15 @@ export class Text2Speech {
   }
 
   async save (filepath, text) {
-    return new Promise((resolve, reject) => {
-      const textParts = this.tokenize(text)
-      const total = textParts.length
-      for (const part of textParts) {
-        const index = textParts.indexOf(part)
-        const headers = this.getHeader()
-        const args = this.getArgs(part, index, total)
-        const fullUrl = GOOGLE_TTS_URL + args
+    const textParts = this.tokenize(text)
+    const total = textParts.length
+    for (const part of textParts) {
+      const index = textParts.indexOf(part)
+      const headers = this.getHeader()
+      const args = this.getArgs(part, index, total)
+      const fullUrl = GOOGLE_TTS_URL + args
 
+      await new Promise((resolve, reject) => {
         const writeStream = fs.createWriteStream(filepath, {
           flags: index > 0 ? 'a' : 'w'
         })
@@ -99,8 +99,8 @@ export class Text2Speech {
           .pipe(writeStream)
         writeStream.on('finish', resolve)
         writeStream.on('error', reject)
-      }
-    })
+      })
+    }
   }
 
   stream (text) {
@@ -142,7 +142,7 @@ export class Text2Speech {
   tokenize (text) {
     if (!text) { throw new Error('No text to speak') }
 
-    const punc = '¡!()[]¿?.,;:—«»\n '
+    const punc = '¡!()[]¿?.,;:—«»\n'
     const puncList = punc.split('').map(function (char) {
       return escapeStringRegexp(char)
     })
@@ -151,20 +151,24 @@ export class Text2Speech {
     let parts = text.split(new RegExp(pattern))
     parts = parts.filter(p => p.length > 0)
 
-    const output = []
-    let i = 0
-    for (const p of parts) {
-      if (!output[i]) {
-        output[i] = ''
-      }
-      if (output[i].length + p.length < this.maxChars) {
-        output[i] += ' ' + p
-      } else {
-        i++
-        output[i] = p
-      }
-    }
-    output[0] = output[0].substr(1)
+    let output = []
+
+    output = parts
+    // TODO: Split parts if they are longer than maxChars
+    // let i = 0
+    // for (const p of parts) {
+    //   if (!output[i]) {
+    //     output[i] = ''
+    //   }
+    //   if (output[i].length + p.length < this.maxChars) {
+    //     output[i] += ' ' + p
+    //   } else {
+    //     i++
+    //     output[i] = p
+    //   }
+    // }
+    // output[0] = output[0].substr(1)
+
     return output
   }
 

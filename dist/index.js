@@ -21,7 +21,7 @@ const fake_useragent_1 = __importDefault(require("fake-useragent"));
 const http_1 = __importDefault(require("http"));
 const url_1 = __importDefault(require("url"));
 const GOOGLE_TTS_URL = 'http://translate.google.com/translate_tts';
-const DEFAULT_MAX_CHARS = 200;
+const DEFAULT_MAX_CHARS = 100;
 const LANGUAGES = {
     af: 'Afrikaans',
     sq: 'Albanian',
@@ -88,14 +88,14 @@ class Text2Speech {
     }
     save(filepath, text) {
         return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
-                const textParts = this.tokenize(text);
-                const total = textParts.length;
-                for (const part of textParts) {
-                    const index = textParts.indexOf(part);
-                    const headers = this.getHeader();
-                    const args = this.getArgs(part, index, total);
-                    const fullUrl = GOOGLE_TTS_URL + args;
+            const textParts = this.tokenize(text);
+            const total = textParts.length;
+            for (const part of textParts) {
+                const index = textParts.indexOf(part);
+                const headers = this.getHeader();
+                const args = this.getArgs(part, index, total);
+                const fullUrl = GOOGLE_TTS_URL + args;
+                yield new Promise((resolve, reject) => {
                     const writeStream = fs_1.default.createWriteStream(filepath, {
                         flags: index > 0 ? 'a' : 'w'
                     });
@@ -107,8 +107,8 @@ class Text2Speech {
                         .pipe(writeStream);
                     writeStream.on('finish', resolve);
                     writeStream.on('error', reject);
-                }
-            });
+                });
+            }
         });
     }
     stream(text) {
@@ -146,28 +146,29 @@ class Text2Speech {
         if (!text) {
             throw new Error('No text to speak');
         }
-        const punc = '¡!()[]¿?.,;:—«»\n ';
+        const punc = '¡!()[]¿?.,;:—«»\n';
         const puncList = punc.split('').map(function (char) {
             return (0, escape_string_regexp_1.default)(char);
         });
         const pattern = puncList.join('|');
         let parts = text.split(new RegExp(pattern));
         parts = parts.filter(p => p.length > 0);
-        const output = [];
-        let i = 0;
-        for (const p of parts) {
-            if (!output[i]) {
-                output[i] = '';
-            }
-            if (output[i].length + p.length < this.maxChars) {
-                output[i] += ' ' + p;
-            }
-            else {
-                i++;
-                output[i] = p;
-            }
-        }
-        output[0] = output[0].substr(1);
+        let output = [];
+        output = parts;
+        // TODO: Split parts if they are longer than maxChars
+        // let i = 0
+        // for (const p of parts) {
+        //   if (!output[i]) {
+        //     output[i] = ''
+        //   }
+        //   if (output[i].length + p.length < this.maxChars) {
+        //     output[i] += ' ' + p
+        //   } else {
+        //     i++
+        //     output[i] = p
+        //   }
+        // }
+        // output[0] = output[0].substr(1)
         return output;
     }
     createServer(port) {
