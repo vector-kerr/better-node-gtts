@@ -1,4 +1,4 @@
-var gtts = require('./index')('en', true);
+var gtts = require('./src/index')('en', true);
 var path = require('path');
 
 /*
