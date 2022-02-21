@@ -1,15 +1,15 @@
-var gtts = require('../dist/index').default
-var path = require('path');
+const gtts = require('../dist/index').default
+const path = require('path')
 
 /*
  * save audio file
  */
 
-var filepath = path.join(__dirname, 'i-love-you.wav');
+const filepath = path.join(__dirname, 'i-love-you.mp4')
 
-gtts.save(filepath, 'I love you',)
+gtts.save(filepath, 'I love you')
   .then(() => {
-    console.log(`save file: "${filepath}" done`);
+    console.log(`save file: "${filepath}" done`)
   })
 
 /*
@@ -18,4 +18,4 @@ gtts.save(filepath, 'I love you',)
  *  + ?text=your-text //read text in defaut language
  *  + ?text=bonjour&lang=fr //read text in specific language (by each request)
  */
-gtts.createServer(8668);
+gtts.createServer(8668)

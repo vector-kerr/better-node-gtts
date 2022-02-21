@@ -7,7 +7,7 @@ import http from 'http'
 import url from 'url'
 
 const GOOGLE_TTS_URL = 'http://translate.google.com/translate_tts'
-const DEFAULT_MAX_CHARS = 200
+const DEFAULT_MAX_CHARS = 100
 const LANGUAGES = {
   af: 'Afrikaans',
   sq: 'Albanian',
