@@ -1,4 +1,4 @@
-var gtts = require('./src/index')('en', true);
+var gtts = require('../dist/index').default
 var path = require('path');
 
 /*
@@ -6,9 +6,11 @@ var path = require('path');
  */
 
 var filepath = path.join(__dirname, 'i-love-you.wav');
-gtts.save(filepath, 'I love you', function() {
-  console.log(`save file: "${filepath}" done`);
-})
+
+gtts.save(filepath, 'I love you',)
+  .then(() => {
+    console.log(`save file: "${filepath}" done`);
+  })
 
 /*
  * Create server listen port 8668
