@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/lino-levan/node-gtts.git"
+    "url": "https://github.com/lino-levan/better-node-gtts.git"
   },
   "keywords": [
     "node",
@@ -27,9 +27,9 @@
   "author": "Lino Le Van",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/thiennq/node-gtts/issues"
+    "url": "https://github.com/lino-levan/better-node-gtts/issues"
   },
-  "homepage": "https://github.com/lino-levan/node-gtts#readme",
+  "homepage": "https://github.com/lino-levan/better-node-gtts#readme",
   "dependencies": {
     "escape-string-regexp": "^1.0.5",
     "fake-useragent": "^1.0.1",
