@@ -1,0 +1,1 @@
+{"version":3,"file":"escapeStringRegexp.js","sourceRoot":"/","sources":["vendored/escapeStringRegexp.ts"],"names":[],"mappings":";;;AACA,SAAgB,kBAAkB,CAAC,GAAW;IAC5C,IAAI,OAAO,GAAG,KAAK,QAAQ,EAAE;QAC3B,MAAM,IAAI,SAAS,CAAC,mBAAmB,CAAC,CAAC;KAC1C;IAID,OAAO,GAAG;SACP,OAAO,CAAC,qBAAqB,EAAE,MAAM,CAAC;SACtC,OAAO,CAAC,IAAI,EAAE,OAAO,CAAC,CAAC;AAC5B,CAAC;AAVD,gDAUC"}

@@ -1,12 +1,12 @@
 {
   "name": "better-node-gtts",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Better version of node-gtts",
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
-    "lint": "eslint 'src/**' --fix",
-    "test": "node ./tests/test.js"
+    "lint": "eslint --fix",
+    "test": "node ./test/test.js"
   },
   "bin": {
     "better-node-gtts": "./dist/bin.js"
@@ -31,20 +31,16 @@
   },
   "homepage": "https://github.com/lino-levan/better-node-gtts#readme",
   "dependencies": {
-    "escape-string-regexp": "^1.0.5",
+    "axios": "^1.2.1",
+    "escape-string-regexp": "^5.0.0",
     "fake-useragent": "^1.0.1",
-    "multistream": "^2.1.0",
-    "request": "^2.81.0"
+    "multistream": "^4.1.0"
   },
   "devDependencies": {
-    "@types/node": "^17.0.19",
-    "@typescript-eslint/eslint-plugin": "^5.12.1",
-    "@typescript-eslint/parser": "^5.12.1",
-    "eslint": "^7.32.0",
-    "eslint-config-standard": "^16.0.3",
-    "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^5.2.0",
-    "typescript": "^4.5.5"
+    "@types/multistream": "^4.1.0",
+    "@types/node": "^18.11.15",
+    "@types/random-useragent": "^0.3.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.4"
   }
 }

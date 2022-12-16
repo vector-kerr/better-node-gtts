@@ -1,159 +1,117 @@
-import request from 'request'
-import escapeStringRegexp from 'escape-string-regexp'
-import fs from 'fs'
-import MultiStream from 'multistream'
-import fakeUa from 'fake-useragent'
-import http from 'http'
-import url from 'url'
+import axios from "axios";
+import fs from "fs";
+import MultiStream, { LazyStream } from "multistream";
+import http from "http";
 
-const GOOGLE_TTS_URL = 'http://translate.google.com/translate_tts'
-const DEFAULT_MAX_CHARS = 100
-const LANGUAGES = {
-  af: 'Afrikaans',
-  sq: 'Albanian',
-  ar: 'Arabic',
-  hy: 'Armenian',
-  ca: 'Catalan',
-  zh: 'Chinese',
-  'zh-cn': 'Chinese (Mandarin/China)',
-  'zh-tw': 'Chinese (Mandarin/Taiwan)',
-  'zh-yue': 'Chinese (Cantonese)',
-  hr: 'Croatian',
-  cs: 'Czech',
-  da: 'Danish',
-  nl: 'Dutch',
-  en: 'English',
-  'en-au': 'English (Australia)',
-  'en-uk': 'English (United Kingdom)',
-  'en-us': 'English (United States)',
-  eo: 'Esperanto',
-  fi: 'Finnish',
-  fr: 'French',
-  de: 'German',
-  el: 'Greek',
-  ht: 'Haitian Creole',
-  hi: 'Hindi',
-  hu: 'Hungarian',
-  is: 'Icelandic',
-  id: 'Indonesian',
-  it: 'Italian',
-  ja: 'Japanese',
-  ko: 'Korean',
-  la: 'Latin',
-  lv: 'Latvian',
-  mk: 'Macedonian',
-  no: 'Norwegian',
-  pl: 'Polish',
-  pt: 'Portuguese',
-  'pt-br': 'Portuguese (Brazil)',
-  ro: 'Romanian',
-  ru: 'Russian',
-  sr: 'Serbian',
-  sk: 'Slovak',
-  es: 'Spanish',
-  'es-es': 'Spanish (Spain)',
-  'es-us': 'Spanish (United States)',
-  sw: 'Swahili',
-  sv: 'Swedish',
-  ta: 'Tamil',
-  th: 'Thai',
-  tr: 'Turkish',
-  vi: 'Vietnamese',
-  cy: 'Welsh'
-}
+import { escapeStringRegexp } from "./vendored/escapeStringRegexp";
+import { LANGUAGES } from "./languages";
+
+const GOOGLE_TTS_URL = "http://translate.google.com/translate_tts";
+const DEFAULT_MAX_CHARS = 100;
 
 export class Text2Speech {
-  lang: string
-  debug: boolean
-  maxChars: number
-  getArgs: (text: string, index: any, total: any) => string
+  lang: string;
+  debug: boolean;
+  maxChars: number;
+  getArgs: (text: string, index: number, total: number) => string;
 
-  constructor (_lang?: string, _debug?: boolean) {
-    this.lang = _lang || 'en'
-    this.debug = _debug || false
-    this.lang = this.lang.toLowerCase()
-    this.maxChars = DEFAULT_MAX_CHARS
-    this.getArgs = this.getArgsFactory(this.lang)
+  constructor(_lang?: string, _debug?: boolean) {
+    this.lang = _lang ?? "en";
+    this.debug = _debug ?? false;
+    this.lang = this.lang.toLowerCase();
+    this.maxChars = DEFAULT_MAX_CHARS;
+    this.getArgs = this.getArgsFactory(this.lang);
 
-    if (!LANGUAGES[this.lang]) { throw new Error('Language not supported: ' + this.lang) }
+    if (LANGUAGES[this.lang] === undefined) {
+      throw new Error("Language not supported: " + this.lang);
+    }
   }
 
-  async save (filepath, text) {
-    const textParts = this.tokenize(text)
-    const total = textParts.length
+  async save(filepath: string, text: string) {
+    const textParts = this.tokenize(text);
+    const total = textParts.length;
     for (const part of textParts) {
-      const index = textParts.indexOf(part)
-      const headers = this.getHeader()
-      const args = this.getArgs(part, index, total)
-      const fullUrl = GOOGLE_TTS_URL + args
+      const index = textParts.indexOf(part);
+      const headers = this.getHeader();
+      const args = this.getArgs(part, index, total);
+      const fullUrl = GOOGLE_TTS_URL + args;
 
       await new Promise((resolve, reject) => {
         const writeStream = fs.createWriteStream(filepath, {
-          flags: index > 0 ? 'a' : 'w'
-        })
-        request({
-          uri: fullUrl,
-          headers: headers,
-          method: 'GET'
-        })
-          .pipe(writeStream)
-        writeStream.on('finish', resolve)
-        writeStream.on('error', reject)
-      })
+          flags: index > 0 ? "a" : "w",
+        });
+        axios({
+          url: fullUrl,
+          headers,
+          method: "GET",
+          responseType: "stream",
+        }).then((response) => {
+          response.data.pipe(writeStream);
+        });
+        writeStream.on("finish", resolve);
+        writeStream.on("error", reject);
+      });
     }
   }
 
-  stream (text) {
-    const textParts = this.tokenize(text)
-    const total = textParts.length
+  async stream(text: string) {
+    const textParts = this.tokenize(text);
+    const total = textParts.length;
 
-    return MultiStream(textParts.map(function (part, index) {
-      const headers = this.getHeader()
-      const args = this.getArgs(part, index, total)
-      const fullUrl = GOOGLE_TTS_URL + args
+    const streams = await Promise.all(textParts.map((part, index) => {
+      return new Promise((resolve) => {
+        const headers = this.getHeader();
+        const args = this.getArgs(part, index, total);
+        const fullUrl = GOOGLE_TTS_URL + args;
 
-      return request({
-        uri: fullUrl,
-        headers: headers,
-        method: 'GET'
-      })
-    }))
+        axios({
+          url: fullUrl,
+          headers,
+          method: "GET",
+          responseType: "stream",
+        }).then((response) => {
+          resolve(response.data);
+        });
+      });
+    })) as LazyStream[];
+
+    return new MultiStream(streams);
   }
 
-  getHeader () {
+  getHeader() {
     const headers = {
-      'User-Agent': fakeUa()
-    }
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/536.26.17 (KHTML like Gecko) Version/6.0.2 Safari/536.26.17",
+    };
 
-    if (this.debug) { console.log(headers) }
+    if (this.debug) console.log(headers);
 
-    return headers
+    return headers;
   }
 
-  getArgsFactory (lang: string) {
-    return (text, index, total) => {
-      const textlen = text.length
-      const encodedText = encodeURIComponent(text)
-      const language = lang || 'en'
-      return `?ie=UTF-8&tl=${language}&q=${encodedText}&total=${total}&idx=${index}&client=tw-ob&textlen=${textlen}`
-    }
+  getArgsFactory(lang: string) {
+    return (text: string, index: number, total: number) => {
+      const textlen = text.length;
+      const encodedText = encodeURIComponent(text);
+      const language = lang ?? "en";
+      return `?ie=UTF-8&tl=${language}&q=${encodedText}&total=${total}&idx=${index}&client=tw-ob&textlen=${textlen}`;
+    };
   }
 
-  tokenize (text) {
-    if (!text) { throw new Error('No text to speak') }
+  tokenize(text: string) {
+    if (text === "") throw new Error("No text to speak");
 
-    const punc = '¡!()[]¿?.,;:—«»\n'
-    const puncList = punc.split('').map(function (char) {
-      return escapeStringRegexp(char)
-    })
+    const punc = "¡!()[]¿?.,;:—«»\n";
+    const puncList = punc.split("").map(function (char) {
+      return escapeStringRegexp(char);
+    });
 
-    const pattern = puncList.join('|')
-    let parts = text.split(new RegExp(pattern))
-    parts = parts.filter(p => p.length > 0)
+    const pattern = puncList.join("|");
+    let parts = text.split(new RegExp(pattern));
+    parts = parts.filter((p) => p.length > 0);
 
-    let output = []
+    let output = [];
 
-    output = parts
+    output = parts;
     // TODO: Split parts if they are longer than maxChars
     // let i = 0
     // for (const p of parts) {
@@ -169,33 +127,33 @@ export class Text2Speech {
     // }
     // output[0] = output[0].substr(1)
 
-    return output
+    return output;
   }
 
-  createServer (port) {
-    const server = http.createServer(function (req, res) {
-      const queryData = new url.URL(req.url).searchParams
-      let argsCallback = this.getArgs
+  createServer(port: number) {
+    const server = http.createServer(async (req, res) => {
+      if (req.url === undefined) throw new Error("???"); // TODO: Investigate
+      const queryData = new URL(req.url).searchParams;
+      // const lang = queryData.get('lang')
+      const text = queryData.get("text");
 
-      if (queryData && queryData.get('lang') && LANGUAGES[queryData.get('lang')]) {
-        argsCallback = this.getArgsFactory(queryData.get('lang'))
-      }
-      if (queryData && queryData.get('text')) {
-        res.writeHead(200, { 'Content-Type': 'audio/mpeg' })
-        this.stream(argsCallback, queryData.get('text')).pipe(res)
+      if (typeof text === "string") {
+        res.writeHead(200, { "Content-Type": "audio/mpeg" });
+        (await this.stream(text)).pipe(res);
       } else {
-        console.log(req.headers)
-        res.writeHead(200, { 'Content-Type': 'application/json' })
+        console.log(req.headers);
+        res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({
           code: -1,
-          message: `Missing text. Please try: ${req.headers.host}?text=your+text`
-        }))
+          message:
+            `Missing text. Please try: ${req.headers.host}?text=your+text`,
+        }));
       }
-    })
+    });
 
-    server.listen(port)
-    console.log('Text-to-Speech Server running on ' + port)
+    server.listen(port);
+    console.log("Text-to-Speech Server running on " + port);
   }
 }
 
-export default new Text2Speech()
+export default new Text2Speech();

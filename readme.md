@@ -13,13 +13,13 @@ npm install better-node-gtts
 ### 1. Save audio file
 
 ```javascript
-var gtts = require('better-node-gtts').default;
-var filepath = './i-love-you.wav';
+var gtts = require("better-node-gtts").default;
+var filepath = "./i-love-you.wav";
 
-gtts.save(filepath, 'I love you')
-  .then(()=>{
-    console.log('save done');
-  })
+gtts.save(filepath, "I love you")
+  .then(() => {
+    console.log("save done");
+  });
 ```
 
 ### 2. Pipe directly to router response
@@ -27,20 +27,20 @@ gtts.save(filepath, 'I love you')
 Example with ExpressJS Router
 
 ```javascript
-var express = require('express');
+var express = require("express");
 var router = express.Router();
-var gtts = require('better-node-gtts').default;
+var gtts = require("better-node-gtts").default;
 
-router.get('/speech', function(req, res) {
-  res.set({'Content-Type': 'audio/mpeg'});
+router.get("/speech", function (req, res) {
+  res.set({ "Content-Type": "audio/mpeg" });
   gtts.stream(req.query.text).pipe(res);
-})
+});
 ```
 
 ### 3. Create a standalone server
 
 ```javascript
-var gtts = require('better-node-gtts').default;
+var gtts = require("better-node-gtts").default;
 gtts.createServer(8668);
 ```
 
@@ -59,8 +59,8 @@ better-node-gtts serve 8668 en
 
 `GET /?text={your-text}`
 
-+ stream audio of speech with default language
+- stream audio of speech with default language
 
 `GET /?text={your-text}?lang={lang}`
 
-+ stream audio of speech with specific language
+- stream audio of speech with specific language
