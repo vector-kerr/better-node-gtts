@@ -47,6 +47,7 @@ export const LANGUAGES: Record<string, string> = {
   sv: "Swedish",
   ta: "Tamil",
   th: "Thai",
+  tl: "Tagalog",
   tr: "Turkish",
   vi: "Vietnamese",
   cy: "Welsh",
