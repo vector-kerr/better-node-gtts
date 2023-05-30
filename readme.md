@@ -2,6 +2,8 @@
 
 This is a better version of node-gtts (Unofficial API)
 
+
+
 ## How to install
 
 ```bash
@@ -54,6 +56,15 @@ better-node-gtts en Hello World
 # (in English by default)
 better-node-gtts serve 8668 en
 ```
+
+### 5. Create an instance with options
+
+```javascript
+import { Text2Speech } from "better-node-gtts";
+const tts = new Text2Speech({lang: "en", debug: false})
+// ...
+```
+
 
 ## API for standalone server
 

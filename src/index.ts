@@ -1,5 +1,6 @@
 import axios from "axios";
 import fs from "fs";
+import qs from 'querystring';
 import MultiStream, { LazyStream } from "multistream";
 import http from "http";
 
@@ -22,6 +23,8 @@ export class Text2Speech {
   debug: boolean;
   maxChars: number;
   throwOnUnsupportedLanguage: boolean;
+  server: http.Server | undefined;
+
   getArgs: (text: string, index: number, total: number) => string;
 
   /**
@@ -37,7 +40,7 @@ export class Text2Speech {
    *
    * @example
    * const tts = new Text2Speech({lang: 'en', debug: false, maxChars: 50})
-   * 
+   *
    * @example
    * const tts = new Text2Speech("en", false)
    */
@@ -171,12 +174,17 @@ export class Text2Speech {
     return output;
   }
 
-  createServer(port: number) {
-    const server = http.createServer(async (req, res) => {
-      if (req.url === undefined) throw new Error("???"); // TODO: Investigate
-      const queryData = new URL(req.url).searchParams;
+  async createServer(port: number) {
+    if(this.server) {
+      console.warn('A HTTP server is already started; returning the existing server.')
+      return Promise.resolve(this.server)
+    }
+
+    this.server = http.createServer(async (req, res) => {
+      this.debug && console.log("Servicing request at URL", req.url)
+      const queryData = qs.parse(req.url?.split('?')[1] ?? '')
       // const lang = queryData.get('lang')
-      const text = queryData.get("text");
+      const text = queryData["text"];
 
       if (typeof text === "string") {
         res.writeHead(200, { "Content-Type": "audio/mpeg" });
@@ -193,8 +201,27 @@ export class Text2Speech {
       }
     });
 
-    server.listen(port);
-    console.log("Text-to-Speech Server running on " + port);
+    return new Promise<http.Server>((resolve) => {
+      this.server!.listen(port, () => {
+        console.log("Text-to-Speech Server running on " + port);
+        resolve(this.server!)
+      })
+    });
+  }
+
+  async closeServer(force: boolean = false) {
+    if(!this.server) {
+      return Promise.resolve()
+    }
+    await new Promise<void>((resolve) => {
+      if(force) {
+        this.server!.closeAllConnections()
+      }
+      this.server!.close(() => {
+        this.server = undefined
+        resolve()
+      })
+    })
   }
 }
 
