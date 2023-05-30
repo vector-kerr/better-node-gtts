@@ -10,6 +10,8 @@ import { LANGUAGES } from "./languages";
 const GOOGLE_TTS_URL = "http://translate.google.com/translate_tts";
 const DEFAULT_MAX_CHARS = 100;
 const DEFAULT_LANG = "en";
+const DEFAULT_DEBUG = false;
+const DEFAULT_THROW_ON_UNSUPPORTED_LANGUAGE = true;
 
 interface Options {
   lang?: string;
@@ -24,37 +26,43 @@ export class Text2Speech {
   maxChars: number;
   throwOnUnsupportedLanguage: boolean;
   server: http.Server | undefined;
-
   getArgs: (text: string, index: number, total: number) => string;
+
 
   /**
    * Create a new Text2Speech instance.
-   * This constructor offers two signatures - one for compatibility and one modern.
    * @param {Options} opts Text2Speech options
    * @param {string} opts.lang The two-letter code for the language to use (default=en)
    * @param {boolean} opts.debug Enable debugging (default=false)
    * @param {number} opts.maxChars The maximum number of characters supported in a single message (default=100)
    * @param {boolean} opts.throwOnUnsupportedLanguage Throw an exception if the supplied language is unsupported (default=true)
-   * @param {string} lang The two-letter code for the language to use (default=en)
-   * @param {boolean} debug Enable debugging (default=false)
-   *
    * @example
    * const tts = new Text2Speech({lang: 'en', debug: false, maxChars: 50})
-   *
+   */
+  public constructor(opts?: Options);
+
+  /**
+   * Create a new Text2Speech instance.
+   * @param {string} lang The two-letter code for the language to use (default=en)
+   * @param {boolean} debug Enable debugging (default=false)
    * @example
    * const tts = new Text2Speech("en", false)
    */
+  public constructor(lang?: string, debug?: boolean);
+
+
   constructor() {
     if (typeof arguments[0] === "object") {
       const opts: Options = arguments[0] as Options;
       this.lang = opts.lang ?? DEFAULT_LANG;
-      this.debug = opts.debug ?? false;
+      this.debug = opts.debug ?? DEFAULT_DEBUG;
       this.maxChars = opts.maxChars ?? DEFAULT_MAX_CHARS;
-      this.throwOnUnsupportedLanguage = opts.throwOnUnsupportedLanguage ?? true;
+      this.throwOnUnsupportedLanguage = opts.throwOnUnsupportedLanguage ?? DEFAULT_THROW_ON_UNSUPPORTED_LANGUAGE;
     } else {
       this.lang = arguments[0] ?? DEFAULT_LANG;
-      this.debug = arguments[1] ?? false;
+      this.debug = arguments[1] ?? DEFAULT_DEBUG;
       this.maxChars = DEFAULT_MAX_CHARS;
+      this.throwOnUnsupportedLanguage = DEFAULT_THROW_ON_UNSUPPORTED_LANGUAGE;
     }
 
     this.lang = this.lang.toLowerCase();
@@ -133,13 +141,15 @@ export class Text2Speech {
   }
 
   getArgsFactory(lang: string) {
-    return (text: string, index: number, total: number) => {
-      const textlen = text.length;
-      const encodedText = encodeURIComponent(text);
-      const language = lang ?? "en";
-      return `?ie=UTF-8&tl=${language}&q=${encodedText}&total=${total}&idx=${index}&client=tw-ob&textlen=${textlen}`;
-    };
+    return (text: string, index: number, total: number) => this.buildArgs(lang, text, index, total)
   }
+
+  buildArgs (lang: string, text: string, index: number, total: number) {
+    const textlen = text.length;
+    const encodedText = encodeURIComponent(text);
+    const language = lang ?? DEFAULT_LANG;
+    return `?ie=UTF-8&tl=${language}&q=${encodedText}&total=${total}&idx=${index}&client=tw-ob&textlen=${textlen}`;
+  };
 
   tokenize(text: string) {
     if (text === "") throw new Error("No text to speak");
