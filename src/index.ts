@@ -26,7 +26,6 @@ export class Text2Speech {
   maxChars: number;
   throwOnUnsupportedLanguage: boolean;
   server: http.Server | undefined;
-  getArgs: (text: string, index: number, total: number) => string;
 
 
   /**
@@ -66,7 +65,6 @@ export class Text2Speech {
     }
 
     this.lang = this.lang.toLowerCase();
-    this.getArgs = this.getArgsFactory(this.lang);
 
     if (LANGUAGES[this.lang] === undefined) {
       if (this.throwOnUnsupportedLanguage) {
@@ -77,13 +75,13 @@ export class Text2Speech {
     }
   }
 
-  async save(filepath: string, text: string) {
+  async save(filepath: string, text: string, opts?: {lang?: string}) {
     const textParts = this.tokenize(text);
     const total = textParts.length;
     for (const part of textParts) {
       const index = textParts.indexOf(part);
       const headers = this.getHeader();
-      const args = this.getArgs(part, index, total);
+      const args = this.buildArgs(opts?.lang ?? this.lang, text, index, total)
       const fullUrl = GOOGLE_TTS_URL + args;
 
       await new Promise((resolve, reject) => {
@@ -104,7 +102,7 @@ export class Text2Speech {
     }
   }
 
-  async stream(text: string) {
+  async stream(text: string, opts?: {lang?: string}) {
     const textParts = this.tokenize(text);
     const total = textParts.length;
 
@@ -112,7 +110,7 @@ export class Text2Speech {
       textParts.map((part, index) => {
         return new Promise((resolve) => {
           const headers = this.getHeader();
-          const args = this.getArgs(part, index, total);
+          const args = this.buildArgs(opts?.lang ?? this.lang, part, index, total)
           const fullUrl = GOOGLE_TTS_URL + args;
 
           axios({
@@ -138,10 +136,6 @@ export class Text2Speech {
 
     if (this.debug) console.log(headers);
     return headers;
-  }
-
-  getArgsFactory(lang: string) {
-    return (text: string, index: number, total: number) => this.buildArgs(lang, text, index, total)
   }
 
   buildArgs (lang: string, text: string, index: number, total: number) {
@@ -191,14 +185,14 @@ export class Text2Speech {
     }
 
     this.server = http.createServer(async (req, res) => {
-      this.debug && console.log("Servicing request at URL", req.url)
-      const queryData = qs.parse(req.url?.split('?')[1] ?? '')
-      // const lang = queryData.get('lang')
-      const text = queryData["text"];
+      this.debug && console.log("GTTS servicing request at URL", req.url);
+      const queryData = qs.parse(req.url?.split('?')[1] ?? '');
+      const lang: string = (queryData['lang'] as string | undefined) ?? this.lang;
+      const text: string | undefined = (queryData['text'] as string | undefined);
 
       if (typeof text === "string") {
         res.writeHead(200, { "Content-Type": "audio/mpeg" });
-        (await this.stream(text)).pipe(res);
+        (await this.stream(text, {lang})).pipe(res);
       } else {
         console.log(req.headers);
         res.writeHead(200, { "Content-Type": "application/json" });
