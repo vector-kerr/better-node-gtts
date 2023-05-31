@@ -1,8 +1,9 @@
 {
   "name": "better-node-gtts",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Better version of node-gtts",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "lint": "eslint --fix",
@@ -22,7 +23,8 @@
     "read",
     "text",
     "google",
-    "translate"
+    "translate",
+    "tts"
   ],
   "author": "Lino Le Van",
   "license": "Apache-2.0",
