@@ -50,6 +50,7 @@ exports.LANGUAGES = {
     sv: "Swedish",
     ta: "Tamil",
     th: "Thai",
+    tl: "Tagalog",
     tr: "Turkish",
     vi: "Vietnamese",
     cy: "Welsh",
